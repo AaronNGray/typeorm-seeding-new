@@ -1,4 +1,4 @@
-import { EntityFactory } from './entity-factory'
+import { EntityFactory } from '../src/entity-factory'
 
 describe('make', () => {
   class User {

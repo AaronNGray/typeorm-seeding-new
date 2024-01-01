@@ -1,3 +1,4 @@
+import { resolve } from 'path'
 import {
   ConnectionOptionsReader,
   Connection as TypeORMConnection,
@@ -5,6 +6,7 @@ import {
   createConnection as TypeORMCreateConnection,
   getConnection as TypeORMGetConnection,
 } from 'typeorm'
+import { DataSource, DataSourceOptions } from 'typeorm'
 import { printError } from './utils/log.util'
 
 interface SeedingOptions {
@@ -109,4 +111,22 @@ export const createConnection = async (option?: TypeORMConnectionOptions): Promi
     ;(global as any)[KEY].connection = connection
   }
   return connection
+}
+
+export const loadDataSource = async (options?: DataSourceOptions): Promise<DataSource> => {
+  const { dataSourcePath, dataSource, overrideConnectionOptions } = (global as any)[KEY]
+
+  let ds: DataSource | undefined
+  if (!dataSource) {
+    if (dataSourcePath) {
+      ds = (await require(resolve(process.cwd(), dataSourcePath))).default as DataSource
+      ds.setOptions({ ...overrideConnectionOptions, ...options })
+    } else {
+      ds = new DataSource({ ...overrideConnectionOptions, ...options })
+    }
+    await ds.initialize()
+    ;(global as any)[KEY].dataSource = ds
+  }
+
+  return (global as any)[KEY].dataSource
 }
